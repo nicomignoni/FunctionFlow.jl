@@ -25,7 +25,7 @@ Some function arguments are themselves functions; this dependency can be express
 
 In order to calculate `k`, you need to compute `f`, `g`, and `h` first, which can be tedious and error-prone when the computational DAG grows. Since all these functions can be eventually expressed with respect to `a` and `b`, it would be more convenient to be able to write `f(a, b)` (or `h(a, b)`, for example). 
 
-`FunctionFlow.jl` does exactly this: it allows you to write a function as a `Node` of a computational DAG, which can be in turn evaluated as a function of the `base` arguments.  
+`FunctionFlow.jl` does exactly this: it allows you to write a function as a `Node` of a computational DAG, which can be in turn evaluated as a function of the `base` arguments only.
 
 ```@example QUICKSTART
 using FunctionFlow
@@ -38,7 +38,7 @@ k_node = Node(k, f_node, h_node)
 nothing # hide
 ```
 
-A `Node` automatically shows its dependency on `base` arguments
+A `Node` is constructed by passing the function it represents, and the "arguments", either `Symbols` for `base` arguments or other `Nodes`. A `Node` automatically shows its dependency on `base` arguments
 
 ```@repl QUICKSTART
 k_node
@@ -58,7 +58,7 @@ k_explicit(a, b) = (b^2 - a + 4b) * (2a + 2)
 nothing # hide
 ```
 
-and then check that the it would produce the same result
+and then check that it would produce the same result
 
 ```@repl QUICKSTART
 k_explicit(3, 2) == k_node(a = 3, b = 2)
