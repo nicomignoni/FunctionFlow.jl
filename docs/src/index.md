@@ -25,7 +25,7 @@ Some function arguments are themselves functions; this dependency can be express
 
 In order to calculate `k`, you need to compute `f`, `g`, and `h` first, which can be tedious and error-prone when the computational DAG grows. Since all these functions can be eventually expressed with respect to `a` and `b`, it would be more convenient to be able to write `f(a, b)` (or `h(a, b)`, for example). 
 
-`FunctionFlow.jl` does exactly this: it allows you write a function as a `Node` of a computational DAG, which can be evaluated as a function of the `base` arguments.  
+`FunctionFlow.jl` does exactly this: it allows you to write a function as a `Node` of a computational DAG, which can be in turn evaluated as a function of the `base` arguments.  
 
 ```@example QUICKSTART
 using FunctionFlow
@@ -33,7 +33,9 @@ using FunctionFlow
 f_node = Node(f, :a)
 g_node = Node(g, :a, :b)
 h_node = Node(h, g_node, :b)
-k_node = Node(k, f_node, h_node);
+k_node = Node(k, f_node, h_node)
+
+nothing # hide
 ```
 
 A `Node` automatically shows its dependency on `base` arguments
@@ -51,8 +53,12 @@ k_node(a = 3, b = 2)
 By recursively substituting `h`, `g`, and `f` in `k`, we can rewrite it as explicitly dependent on `a` and `b`
 
 ```@example QUICKSTART
-k_explicit(a, b) = (b^2 - a + 4b) * (2a + 2);
+k_explicit(a, b) = (b^2 - a + 4b) * (2a + 2)
+
+nothing # hide
 ```
+
+and then check that the it would produce the same result
 
 ```@repl QUICKSTART
 k_explicit(3, 2) == k_node(a = 3, b = 2)
@@ -60,7 +66,7 @@ k_explicit(3, 2) == k_node(a = 3, b = 2)
 
 Each `Node` caches its value, based on the hashed `base`, in a [Least-Recently-Used cache](https://en.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_(LRU)) provided by [`LRUCache.jl`](https://github.com/JuliaCollections/LRUCache.jl).
 
-```@repl QUICKSTART
+```@example QUICKSTART
 using LRUCache
 
 cache_info(k_node.cache)
