@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="46.779972"
-   height="43.769356"
-   viewBox="0 0 12.3772 11.580641"
+   width="39.999996mm"
+   height="37.42572mm"
+   viewBox="0 0 39.999994 37.425717"
    version="1.1"
    id="svg5"
    inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="8.456156"
-     inkscape:cx="21.168011"
-     inkscape:cy="26.607835"
+     inkscape:zoom="4.228078"
+     inkscape:cx="68.116056"
+     inkscape:cy="86.564155"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
      inkscape:window-x="0"
@@ -106,13 +106,14 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-140.96443,-66.206149)">
+     transform="translate(-140.96442,-66.206148)">
     <g
        aria-label="so"
        id="text382"
        style="font-weight:bold;font-size:8.46667px;font-family:Montserrat;-inkscape-font-specification:'Montserrat Bold';fill:#e9eff7;stroke:#48668c;stroke-width:1.2" />
     <g
-       id="g4">
+       id="g4"
+       transform="matrix(3.2317483,0,0,3.2317483,-314.59714,-147.75546)">
       <path
          style="fill:#9558b2;fill-opacity:1;stroke:#9558b2;stroke-width:1.2;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#TriangleStart)"
          d="m 148.02454,71.997364 h 3.95653"
