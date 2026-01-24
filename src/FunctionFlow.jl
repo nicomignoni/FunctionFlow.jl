@@ -7,8 +7,8 @@ export Node, Ambiguity, base
 abstract type AbstractNodeTrait end
 abstract type ConcreteNodeTrait <: AbstractNodeTrait end
 
-const AbstractNode = Union{AbstractNodeTrait,Symbol}
-const ConcreteNode = Union{ConcreteNodeTrait,Symbol}
+const AbstractNode = Union{AbstractNodeTrait, Symbol}
+const ConcreteNode = Union{ConcreteNodeTrait, Symbol}
 
 struct Node <: ConcreteNodeTrait
     f::Any
@@ -28,27 +28,8 @@ struct Ambiguity <: AbstractNodeTrait
         new(Set(nodes), default)
 end
 
-resolve(sym::Symbol, base, ::Any) = base[sym]
-resolve(node::Node, base, selections) = node(selections...; base...)
-function resolve(ambiguity::Ambiguity, base, selections)
-    selection = intersect(ambiguity.nodes, Set(selections))
-    selection_size = length(selection)
-
-    if selection_size > 1
-        error("Inconsistent")
-    elseif selection_size == 1
-        return resolve(first(selection), base, selections)
-    else
-        if ambiguity.default === nothing
-            error("No default and missing selection")
-        else
-            return resolve(ambiguity.default, base, selections)
-        end
-    end
-end
-
 function (node::Node)(selections::ConcreteNode...; base...)
-    key = hash((base, selections))
+    key = hash((selections, base))
     value = get!(node.cache, key) do
         args = Tuple(resolve(arg, base, selections) for arg in node.args)
         node.f(args...)
@@ -56,19 +37,37 @@ function (node::Node)(selections::ConcreteNode...; base...)
     return value
 end
 
-base(sym::Symbol) = [sym]
-base(node::Node) = mapreduce(base, (head, tail) -> vcat(head, tail) |> unique, node.args)
-
-# TODO: figure out what is a `base` for an Ambiguity
-base(ambiguity::Ambiguity) = [base(node) for node in ambiguity.nodes]
-
-function Base.show(io::IO, node::Node)
-    print(io, "$(typeof(node)) with base ($(join(base(node), ", ")))")
+function selection(ambiguity::Ambiguity, selections::Tuple{Vararg{ConcreteNode}})
+    selection = intersect(ambiguity.nodes, Set(selections))
+    selection_size = length(selection)
+    if selection_size > 1 
+        error("Nodes $selection can not be simultaneously selected for $ambiguity.")
+    elseif selection_size == 1
+        return first(selection)
+    else 
+        return ambiguity.default === nothing ? 
+               error("No Node among $selections is a Node for $ambiguity") : 
+               ambiguity.default
+    end
 end
 
-# TODO: figure out how to print Ambiguities
+resolve(sym::Symbol, base, ::Any) = base[sym]
+resolve(node::Node, base, selections) = node(selections...; base...)
+resolve(ambiguity::Ambiguity, base, selections) = resolve(selection(ambiguity, selections), base, selections)
+
+base(sym::Symbol, ::Any...) = [sym]
+base(node::Node, selections::ConcreteNode...) =
+    mapreduce(arg -> base(arg, selections...), (h, t) -> unique(vcat(h, t)), node.args)
+base(ambiguity::Ambiguity, selections::ConcreteNode...) = 
+    base(selection(ambiguity, selections), selections...) 
+
+# TODO: improve printing
+function Base.show(io::IO, node::Node)
+    print(io, "$(typeof(node))($(nameof(node.f)); $(join(node.args, ", ")))")
+end
+
 function Base.show(io::IO, ambiguity::Ambiguity)
-    print(io, "$(typeof(ambiguity)) with Nodes ($(join(ambiguity.nodes, ", ")))")
+    print(io, "$(typeof(ambiguity))($(join(ambiguity.nodes, ", ")))")
 end
 
 end # module FunctionFlow
