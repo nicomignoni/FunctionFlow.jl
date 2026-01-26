@@ -2,41 +2,29 @@ module FunctionFlow
 
 using LRUCache
 
-export @root, @roots, Node, Choice, base
+export Node, Choice, base
 
-abstract type AbstractNode end
-abstract type ConcreteNode <: AbstractNode end
+abstract type AbstractNodeTrait end
+abstract type ConcreteNodeTrait <: AbstractNodeTrait end
 
-struct Root <: ConcreteNode 
-    sym::Symbol
-end
+const AbstractNode = Union{AbstractNodeTrait,Symbol}
+const ConcreteNode = Union{ConcreteNodeTrait,Symbol}
 
-macro root(term) 
-    return :( $(esc(term)) = $(Root(term)) ) 
-end
-
-# TODO: use @root in the comprehension
-macro roots(terms...)
-    exprs = [:( $(esc(term)) = $(Root(term)) ) for term in terms]
-    return Expr(:block, exprs...)
-end
-
-struct Node{A<:Tuple, K<:NamedTuple} <: ConcreteNode
+struct Node <: ConcreteNodeTrait
     f::Any
-    args::A
-    kwargs::K
+    args::Tuple{Vararg{AbstractNode}}
+    kwargs::NamedTuple
     cache::LRU{UInt64,Any}
 
-    function Node(f, args...; cache_size::Int=1, kwargs...)
-        @assert all(arg isa AbstractNode for arg in args)
+    function Node(f, args::AbstractNode...; cache_size::Int=1, kwargs...)
         @assert all(val isa AbstractNode for val in values(kwargs))
         kwargs_nt = NamedTuple(kwargs)
         cache = LRU{UInt64,Any}(maxsize=cache_size)
-        new{typeof(args), typeof(kwargs_nt)}(f, args, kwargs_nt, cache)
+        new(f, args, kwargs_nt, cache)
     end
 end
 
-struct Choice <: AbstractNode
+struct Choice <: AbstractNodeTrait
     nodes::Set{ConcreteNode}
     default::Union{Nothing,ConcreteNode}
 
@@ -54,7 +42,7 @@ function (node::Node)(selections::ConcreteNode...; base...)
     return value
 end
 
-resolve(root::Root, base, ::Any) = base[root.sym]
+resolve(sym::Symbol, base, ::Any) = base[sym]
 resolve(node::Node, base, selections) = node(selections...; base...)
 resolve(choice::Choice, base, selections) = resolve(selection(choice, selections), base, selections)
 
@@ -72,17 +60,13 @@ function selection(choice::Choice, selections::Tuple{Vararg{ConcreteNode}})
     end
 end
 
-base(root::Root, ::Any...) = [root]
+base(sym::Symbol, ::Any...) = [sym]
 base(node::Node, selections::ConcreteNode...) =
     mapreduce(arg -> base(arg, selections...), (h, t) -> unique(vcat(h, t)), node.args)
 base(choice::Choice, selections::ConcreteNode...) = 
     base(selection(choice, selections), selections...) 
 
 # TODO: improve printing
-function Base.show(io::IO, root::Root)
-    print(io, "$(root |> typeof |> nameof)($(root.sym))")
-end
-
 function Base.show(io::IO, node::Node)
     print(io, "$(node |> typeof |> nameof)($(node.f |> nameof))")
 end

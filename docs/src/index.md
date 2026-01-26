@@ -32,11 +32,9 @@ In order to calculate `k`, you need to compute `f`, `g`, and `h` first, which ca
 ```@example QUICKSTART
 using FunctionFlow
 
-@roots a b 
-
-f_node = Node(f, a)
-g_node = Node(g, a, b)
-h_node = Node(h, g_node, b)
+f_node = Node(f, :a)
+g_node = Node(g, :a, :b)
+h_node = Node(h, g_node, :b)
 k_node = Node(k, f_node, h_node)
 
 nothing # hide
@@ -88,10 +86,8 @@ The computational DAG becomes as follows
 Let's create a `Node` for each of them
 
 ```@example QUICKSTART
-@root d
-
-f1_node = Node(f1, a)
-f2_node = Node(f2, b, d)
+f1_node = Node(f1, :a)
+f2_node = Node(f2, :b, :d)
 
 nothing # hide
 ```
@@ -156,16 +152,14 @@ f2(b, m) = 2.3m + b
 k(f, h) = h * (f - 1)
 
 # DAG
-@roots a b d e 
+g_node = Node(g, :a, :b)
+h_node = Node(h, g_node, :b)
 
-g_node = Node(g, a, b)
-h_node = Node(h, g_node, b)
+m1_node = Node(m1, :d)
+m2_node = Node(m2, :d, :e)
 
-m1_node = Node(m1, d)
-m2_node = Node(m2, d, e)
-
-f1_node = Node(f1, a)
-f2_node = Node(f2, b, Choice(m1_node, m2_node, d))
+f1_node = Node(f1, :a)
+f2_node = Node(f2, :b, Choice(m1_node, m2_node, :d))
 
 k_node = Node(k, Choice(f1_node, f2_node; default=f2_node), h_node)
 
